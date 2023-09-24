@@ -6,12 +6,15 @@ from email.mime.image import MIMEImage
 from email.mime.base import MIMEBase
 from email import encoders
 
+successful=0
+failed=0
+failed_Id=[]
 # Replace these placeholders with your email credentials
-sender_email = 'spammailkb4@gmail.com'
-sender_password = 'ekqd cjfa tjnf xeqk'
+sender_email = 'Your_Email_ID_here' #Gmail ID
+sender_password = 'App password for your email'
 
 # Replace 'your_excel_file.xlsx' with the actual file path of your modified Excel sheet
-excel_file_path = 'Details.xlsx'
+excel_file_path = 'Details2.xlsx'
 
 # Load the Excel sheet into a Pandas DataFrame
 try:
@@ -59,24 +62,46 @@ for index, row in df.iterrows():
                 # Extract the numeric part from the PhotoID
                 numeric_photo_id = ''.join(filter(str.isdigit, str(photo_id)))
                 # Construct the actual file name by adding the prefix
+
                 actual_photo_id = f'KDS_{numeric_photo_id}.jpg'
+                
+
                 
                 # Attach the corresponding photo to the email
                 photo_file_path = f'D:/Documents/Works/Images/{actual_photo_id}'  # Replace with the actual path to your photos
-                with open(photo_file_path, 'rb') as attachment:
-                    part = MIMEBase('application', 'octet-stream')
-                    part.set_payload((attachment).read())
-                    encoders.encode_base64(part)
-                    part.add_header('Content-Disposition', f"attachment; filename={actual_photo_id}")
-                    msg.attach(part)
+                try:
+                    with open(photo_file_path, 'rb') as attachment:
+                        part = MIMEBase('application', 'octet-stream')
+                        part.set_payload((attachment).read())
+                        encoders.encode_base64(part)
+                        part.add_header('Content-Disposition', f"attachment; filename={actual_photo_id}")
+                        msg.attach(part)
+                    # print(photo_file_path)
+                    # os.path.isfile(photo_file_path)
+
+                    try:
+                        text = msg.as_string()
+                        session.sendmail(sender_email, email, text)
+                        print(f"Email sent successfully to {email}")
+                        successful+=1
+                    except Exception as e:
+                        print(f"Error: Failed to send email to {email}: {str(e)}")
+                        failed+=1
+                        
+                except Exception as e:
+                    print(f"The image {actual_photo_id} could not be found in the folder.")
+                    failed+=1
+                    failed_Id.append(actual_photo_id)
 
     # Send the email
-    try:
-        text = msg.as_string()
-        session.sendmail(sender_email, email, text)
-        print(f"Email sent successfully to {email}")
-    except Exception as e:
-        print(f"Error: Failed to send email to {email}: {str(e)}")
 
+
+#Print the stats 
+print()
+print("---------------------------------------------------------------------------")
+print()
+print("Successful: ",successful)
+print("Failed: ",failed)
+print(failed_Id)
 # Quit the SMTP session
 session.quit()
